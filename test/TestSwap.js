@@ -31,7 +31,7 @@ contract('Dogecoin, BCH, Swap', function(accounts) {
               }),
               instance.balanceOf.call(accounts[1]).then(function(balance) {
                 assert.equal(balance, 0, "0 wasn't the sender balance");
-              })
+              }),
             ]);
           });
         });
@@ -39,21 +39,24 @@ contract('Dogecoin, BCH, Swap', function(accounts) {
     });
   });
 
-  // it("fails swap setup if no funds", function() {
-  //   return Swap.new.call(accounts[1], Dogecoin.deployed(), accounts[2], BitcoinCash.deployed(), 1, 1).then(function(instance) {
-  //     assert.equal(0, 1, "hi");
-  //   }).catch(function(error) {
-  //     console.log(error);
-  //   });
-
-  // });
+  it("dogecoin allowance", function() {
+    return Dogecoin.deployed().then(function(dogecoin) {
+        return dogecoin.approve(accounts[1], 10, {'from': accounts[0]}).then(function(txn) {
+          return dogecoin.allowance(accounts[0], accounts[1]).then(function(cap) {
+            assert.equal(10, cap.valueOf(), "cap");
+          });
+        });
+    });
+  });
 
   it("collateralize succeeds if has funds funds", function() {
     return Dogecoin.deployed().then(function(dogecoin) {
-      return Swap.new(accounts[0], Dogecoin.deployed().address, accounts[1], BitcoinCash.deployed().address, 1, 1).then(function(swap) {
-        return dogecoin.approve.call(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
-          return swap.collateralize.call({'from': accounts[0]}).then(function(txn) {
-            assert.equal(1, 1);
+      return BitcoinCash.deployed().then(function(bch) {
+        return Swap.new(accounts[0], dogecoin.address, accounts[1], bch.address, 1, 1).then(function(swap) {
+          return dogecoin.approve(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
+            return swap.collateralize({'from': accounts[0]}).then(function(txn) {
+              console.log(':)');
+            });
           });
         });
       });
@@ -61,17 +64,6 @@ contract('Dogecoin, BCH, Swap', function(accounts) {
     });
   });
 
-  it("collateralize fails if no has funds funds", function() {
-    return Dogecoin.deployed().then(function(dogecoin) {
-      return Swap.new(accounts[0], Dogecoin.deployed().address, accounts[1], BitcoinCash.deployed().address, 10, 10).then(function(swap) {
-        return dogecoin.approve.call(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
-          return swap.collateralize.call({'from': accounts[0]}).then(function(txn) {
-            assert.equal(1, 1);
-          });
-        });
-      });
 
-    });
-  });
 
 });
