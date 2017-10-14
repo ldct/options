@@ -20,7 +20,7 @@ contract BitcoinCash is ERC20Interface {
 
     // Constructor
     function BitcoinCash() {
-        // owner = msg.sender;
+        owner = msg.sender;
         balances[owner] = _totalSupply;
     }
 

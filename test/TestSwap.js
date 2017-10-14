@@ -55,12 +55,48 @@ contract('Dogecoin, BCH, Swap', function(accounts) {
         return Swap.new(accounts[0], dogecoin.address, accounts[1], bch.address, 1, 1).then(function(swap) {
           return dogecoin.approve(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
             return swap.collateralize({'from': accounts[0]}).then(function(txn) {
-              console.log(':)');
+              assert(true);
             });
           });
         });
       });
+    });
+  });
 
+  it("collateralize fails if no has funds funds", function() {
+    return Dogecoin.deployed().then(function(dogecoin) {
+      return BitcoinCash.deployed().then(function(bch) {
+        return Swap.new(accounts[0], dogecoin.address, accounts[1], bch.address, 10, 10).then(function(swap) {
+          return dogecoin.approve(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
+            return swap.collateralize({'from': accounts[0]}).then(function(txn) {
+              assert(false);
+            }).catch(function(e) {
+              assert(true);
+            });
+          });
+        });
+      });
+    });
+  });
+
+
+  it("striker exercises swap", function() {
+    return Dogecoin.deployed().then(function(dogecoin) {
+      return BitcoinCash.deployed().then(function(bitcoincash) {
+        return bitcoincash.transfer(accounts[1], 21000000).then(function(txn) {
+          return Swap.new(accounts[0], dogecoin.address, accounts[1], bitcoincash.address, 1, 1).then(function(swap) {
+            return dogecoin.approve(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
+              return swap.collateralize({'from': accounts[0]}).then(function(txn) {
+                return bitcoincash.approve(swap.address, 1, {'from': accounts[1]}).then(function(txn) {
+                  return swap.strike({'from': accounts[1]}).then(function(txn) {
+                    assert(true);
+                  })
+                })
+              });
+            });
+          });
+        });
+      });
     });
   });
 
