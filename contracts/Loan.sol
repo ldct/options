@@ -9,7 +9,7 @@ contract Loan {
     uint _baseTokenAmount;
     /*uint _minQuoteTokenPrice;*/
 
-    Token _baseToken;
+    ERC20Interface _baseToken;
     /*Token _quoteToken;*/
 
     //TODO: add fees, expiration

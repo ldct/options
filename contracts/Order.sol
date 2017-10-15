@@ -1,7 +1,6 @@
 pragma solidity ^0.4.15;
 
-import "./base/Token.sol";
-import "./Exchange.sol";
+import "./ERC20Interface.sol";
 
 contract Order {
 
@@ -19,8 +18,8 @@ contract Order {
             address maker,
             address makerToken,
             address takerToken,
-            uint baseTokenAmount,
-            uint minQuoteTokenPrice) {
+            uint makerTokenAmount,
+            uint pricePerMakerToken) {
 
         _maker = maker;
         _makerTokenAmount = makerTokenAmount;
@@ -37,8 +36,8 @@ contract Order {
 
     function fill() {
       require(msg.sender != _maker);
-      require(makerToken.transferFrom(this, msg.sender, _makerTokenAmount));
-      require(takerToken.transferFrom(msg.sender, this,
+      require(_makerToken.transferFrom(this, msg.sender, _makerTokenAmount));
+      require(_takerToken.transferFrom(msg.sender, this,
         _pricePerMakerToken * _makerTokenAmount));
     }
 }
