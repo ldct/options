@@ -2,7 +2,7 @@ pragma solidity ^0.4.15;
 
 import "./ERC20Interface.sol";
 
-// OTC American Swap Option
+// American Swap Option; strike can be called by anyone with enough rightsToken to bring
 contract Swap {
 
     address _writer;
@@ -10,6 +10,8 @@ contract Swap {
 
     uint _collateralAmount;
     uint _strikeAmount;
+
+    uint _expiry;
 
     ERC20Interface collateralCoin;
     ERC20Interface strikeCoin;
@@ -20,12 +22,14 @@ contract Swap {
             address striker,
             address strikeCoinAddress,
             uint strikeAmount,
-            uint collateralAmount) {
+            uint collateralAmount,
+            uint expiry) {
 
         _writer = writer;
         _striker = striker;
         _collateralAmount = collateralAmount;
         _strikeAmount = strikeAmount;
+        _expiry = expiry;
 
         collateralCoin = ERC20Interface(collateralCoinAddress);
         strikeCoin = ERC20Interface(strikeCoinAddress);
@@ -38,6 +42,7 @@ contract Swap {
     }
 
     function strike() {
+        require (block.timestamp < _expiry);
         require(msg.sender == _striker);
         // send collateral to striker
         require(collateralCoin.transfer(_striker, _strikeAmount));
