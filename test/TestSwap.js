@@ -3,11 +3,11 @@ const BitcoinCash = artifacts.require("./BitcoinCash.sol");
 const Dash = artifacts.require("./Dash.sol");
 const Swap = artifacts.require("./Swap.sol");
 const TokenizedSwap = artifacts.require("./TokenizedSwap.sol");
+const SwapToken = artifacts.require("./SwapToken.sol");
+
 
 // 30th July 2020
 const EXPIRY = 1596067200;
-
-const increaseTime = addSeconds => web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [addSeconds], id: 0})
 
 contract('Dogecoin, BCH, Swap', function(accounts) {
   it("starts with the right supply", function () {
@@ -121,6 +121,11 @@ contract('TokenizedSwap', function(accounts) {
       accounts[0], dogecoin.address, bitcoincash.address, dash.address, 1, 1, 1000, EXPIRY
     );
 
+    // account | DOGE balance | BCH balance | DASH balance
+    // 0       | 84000000     | 0           | 0
+    // 1       | 0            | 20000000    | 0
+    // 2       | 0            | 1000000     | 18900000
+
     // collateralize 1 DOGE from account 0
     await dogecoin.approve(swap.address, 1);
     await swap.collateralize();
@@ -129,6 +134,31 @@ contract('TokenizedSwap', function(accounts) {
     await bitcoincash.approve(swap.address, 1, {'from': accounts[2]});
     await dash.approve(swap.address, 1000, {'from': accounts[2]});
     await swap.strike({'from': accounts[2]});
+
+  });
+});
+
+contract('SwapToken', function(accounts) {
+  it("issues correctly", async () => {
+    const dogecoin = await Dogecoin.deployed();
+    const bitcoincash = await BitcoinCash.deployed();
+    const dash = await Dash.deployed();
+
+    const st = await SwapToken.new(
+      dogecoin.address,
+      bitcoincash.address,
+      1,
+      1,
+      EXPIRY
+    );
+
+    dogecoin.approve(st.address, 1);
+    await st.issue(1);
+
+
+    console.log(await dogecoin.balanceOf(accounts[0]));
+    console.log(await st.balanceOf(accounts[0]));
+
 
   });
 });

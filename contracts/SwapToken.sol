@@ -30,17 +30,24 @@ contract SwapToken is ERC20Interface {
         _expiry = expiry;
     }
 
-    function issue(uint strikeAmount) returns (address) {
+    function issue(uint strikeAmount) {
+        uint collateralAmount = strikeAmount * _ratioCollateral / _ratioStrike;
         TokenizedSwap ts = new TokenizedSwap(
             msg.sender,
             _collateralCoinAddress,
             _strikeCoinAddress,
             this,
             strikeAmount,
-            (strikeAmount * _ratioCollateral / _ratioStrike),
+            collateralAmount,
             strikeAmount * 1000,
             _expiry
         );
+
+        balances[msg.sender] += strikeAmount * 1000;
+
+        ERC20Interface collateralCoin = ERC20Interface(_collateralCoinAddress);
+        collateralCoin.transferFrom(msg.sender, this, collateralAmount);
+
     }
 
 
