@@ -2,6 +2,7 @@ pragma solidity ^0.4.15;
 
 import "./ERC20Interface.sol";
 
+// OTC American Swap Option
 contract Swap {
 
     address _writer;
@@ -39,7 +40,7 @@ contract Swap {
     function strike() {
         require(msg.sender == _striker);
         // send collateral to striker
-        require(collateralCoin.transferFrom(this, _striker, _strikeAmount));
+        require(collateralCoin.transfer(_striker, _strikeAmount));
         // collect strike fee from striker
         require(strikeCoin.transferFrom(_striker, this, _strikeAmount));
         // selfdestruct();
