@@ -1,38 +1,49 @@
 pragma solidity ^0.4.15;
 
 import "./ERC20Interface.sol";
+import "./Swap.sol";
 
-// American Swap Option; strike can be called by anyone with enough rightsToken to bring
-contract Swap {
+// Like OTCSwap, except anyone with rightsToken can burn it to call strike()
+
+contract TokenizedSwap {
 
     address _writer;
     address _striker;
 
     uint _collateralAmount;
     uint _strikeAmount;
+    uint _rightsAmount;
 
     uint _expiry;
 
     ERC20Interface collateralCoin;
     ERC20Interface strikeCoin;
+    ERC20Interface rightsToken;
 
-    function Swap(
+    function TokenizedSwap(
             address writer,
             address collateralCoinAddress,
-            address striker,
             address strikeCoinAddress,
+            address rightsTokenAddress,
             uint strikeAmount,
             uint collateralAmount,
+            uint rightsAmount,
             uint expiry) {
 
         _writer = writer;
-        _striker = striker;
         _collateralAmount = collateralAmount;
         _strikeAmount = strikeAmount;
         _expiry = expiry;
+        _rightsAmount = rightsAmount;
 
         collateralCoin = ERC20Interface(collateralCoinAddress);
         strikeCoin = ERC20Interface(strikeCoinAddress);
+        rightsToken = ERC20Interface(rightsTokenAddress);
+
+    }
+
+    function owner() constant returns (address) {
+        return _writer;
     }
 
     function collateralize() {
@@ -42,17 +53,16 @@ contract Swap {
     }
 
     function strike() {
-        require (block.timestamp < _expiry);
-        require(msg.sender == _striker);
         // send collateral to striker
-        require(collateralCoin.transfer(_striker, _strikeAmount));
+        require(collateralCoin.transfer(msg.sender, _collateralAmount));
         // collect strike fee from striker
-        require(strikeCoin.transferFrom(_striker, this, _strikeAmount));
-        // selfdestruct();
+        require(strikeCoin.transferFrom(msg.sender, this, _strikeAmount));
+        // send strike fee to to writer
+        require(strikeCoin.transfer(_writer, _strikeAmount));
+
+        // burn sender rightsToken
+        require(rightsToken.transferFrom(msg.sender, this, _rightsAmount));
+        require(rightsToken.transfer(0, _rightsAmount));
     }
 
-    function transfer(address to) {
-        require(msg.sender == _striker);
-        _striker = to;
-    }
 }
