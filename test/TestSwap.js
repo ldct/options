@@ -108,47 +108,27 @@ contract('Dogecoin, BCH, Swap', function(accounts) {
 });
 
 contract('TokenizedSwap', function(accounts) {
-  it("striker exercises swap", function() {
-    return Dogecoin.deployed().then(function(dogecoin) {
-      return BitcoinCash.deployed().then(function(bitcoincash) {
-        return Dash.deployed().then(function(dash) {
+  it("striker exercises swap", async () => {
+    const dogecoin = await Dogecoin.deployed();
+    const bitcoincash = await BitcoinCash.deployed();
+    const dash = await Dash.deployed();
 
-          return bitcoincash.transfer(accounts[2], 1000000).then(function(txn) {
-            return dogecoin.transfer(accounts[2], 1).then(function(txn) {
-              return dash.transfer(accounts[2], 18900000).then(function(txn) {
-                // account | DOGE balance | BCH balance | DASH balance
-                // 0       | 84000000     | 0           | 0
-                // 1       | 0            | 20000000    | 0
-                // 2       | 0            | 1000000     | 18900000
+    await bitcoincash.transfer(accounts[2], 1000000);
+    await dogecoin.transfer(accounts[2], 1);
+    await dash.transfer(accounts[2], 18900000);
 
-                return TokenizedSwap.new(
-                  accounts[0], dogecoin.address, bitcoincash.address, dash.address, 1, 1, 1000, EXPIRY
-                ).then(function(swap) {
+    const swap = await TokenizedSwap.new(
+      accounts[0], dogecoin.address, bitcoincash.address, dash.address, 1, 1, 1000, EXPIRY
+    );
 
-                  // collateralize 1 DOGE from account 0
-                  return dogecoin.approve(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
-                    return swap.collateralize({'from': accounts[0]}).then(function(txn) {
+    // collateralize 1 DOGE from account 0
+    await dogecoin.approve(swap.address, 1);
+    await swap.collateralize();
 
-                      // strike from account 2
-                      return bitcoincash.approve(swap.address, 1, {'from': accounts[2]}).then(function(txn) {
-                        return dash.approve(swap.address, 1000, {'from': accounts[2]}).then(function(txn) {
-                          return swap.strike({'from': accounts[2]}).then(function(txn) {
-                            assert(true);
-                          });
-                        });
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
+    // strike from account 2
+    await bitcoincash.approve(swap.address, 1, {'from': accounts[2]});
+    await dash.approve(swap.address, 1000, {'from': accounts[2]});
+    await swap.strike({'from': accounts[2]});
+
   });
-
-
-
-
 });
