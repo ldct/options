@@ -1,0 +1,14 @@
+# Protocol
+
+- Collateralize: take ownership of collateral
+- Strike: action of calling a function
+- Option: right to strike
+
+# Not yet implemented
+
+- Diversification (option = insurance on unlikely event) + unroll policy
+- Short selling as exercise collateralized time-limited loan
+
+# Alternatives
+
+- Price feeds (BitShares, BitUSD)

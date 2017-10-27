@@ -30,6 +30,8 @@ contract SwapToken is ERC20Interface {
         _expiry = expiry;
     }
 
+    // mints new tokens
+    // deploys a new TokenizedSwap contract
     function issue(uint strikeAmount) {
         uint collateralAmount = strikeAmount * _ratioCollateral / _ratioStrike;
         TokenizedSwap ts = new TokenizedSwap(

@@ -2,6 +2,7 @@ pragma solidity ^0.4.15;
 
 import "./ERC20Interface.sol";
 
+// OTC swap
 contract Swap {
 
     address _writer;
