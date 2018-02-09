@@ -5,6 +5,13 @@ const Swap = artifacts.require("./Swap.sol");
 const TokenizedSwap = artifacts.require("./TokenizedSwap.sol");
 const SwapToken = artifacts.require("./SwapToken.sol");
 
+const assertFails = async (f) => {
+    try {
+        await f();
+    } catch (e) { return; }
+    console.log("oh no, succeeded");
+    assert.fail("oh no, succeeded");
+}
 
 // 30th July 2020
 const EXPIRY = 1596067200;
@@ -70,40 +77,31 @@ contract('Dogecoin, BCH, Swap', function(accounts) {
     });
   });
 
-  it("collateralize fails if no has funds funds", function() {
-    return Dogecoin.deployed().then(function(dogecoin) {
-      return BitcoinCash.deployed().then(function(bch) {
-        return Swap.new(accounts[0], dogecoin.address, accounts[1], bch.address, 10, 10, EXPIRY).then(function(swap) {
-          return dogecoin.approve(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
-            return swap.collateralize({'from': accounts[0]}).then(function(txn) {
-              assert(false);
-            }).catch(function(e) {
-              assert(true);
-            });
-          });
-        });
-      });
-    });
+  it("collateralize fails if no has funds funds", async () => {
+    const dogecoin = await Dogecoin.deployed();
+    const bitcoincash = await BitcoinCash.deployed();
+
+    const swap = await Swap.new(accounts[0], dogecoin.address, accounts[1], bitcoincash.address, 10, 10, EXPIRY);
+
+    await dogecoin.approve(swap.address, 1, {'from': accounts[0]});
+
+    assertFails(swap.collateralize.bind({'from': accounts[0]}));
+
   });
 
-  it("striker exercises swap", function() {
-    return Dogecoin.deployed().then(function(dogecoin) {
-      return BitcoinCash.deployed().then(function(bitcoincash) {
-        return bitcoincash.transfer(accounts[1], 21000000).then(function(txn) {
-          return Swap.new(accounts[0], dogecoin.address, accounts[1], bitcoincash.address, 1, 1, EXPIRY).then(function(swap) {
-            return dogecoin.approve(swap.address, 1, {'from': accounts[0]}).then(function(txn) {
-              return swap.collateralize({'from': accounts[0]}).then(function(txn) {
-                return bitcoincash.approve(swap.address, 1, {'from': accounts[1]}).then(function(txn) {
-                  return swap.strike({'from': accounts[1]}).then(function(txn) {
-                    assert(true);
-                  })
-                })
-              });
-            });
-          });
-        });
-      });
-    });
+  it("striker exercises swap", async () => {
+
+    const dogecoin = await Dogecoin.deployed();
+    const bitcoincash = await BitcoinCash.deployed();
+
+    await bitcoincash.transfer(accounts[1], 21000000);
+
+    const swap = await Swap.new(accounts[0], dogecoin.address, accounts[1], bitcoincash.address, 1, 1, EXPIRY);
+    await dogecoin.approve(swap.address, 1, {'from': accounts[0]});
+    await swap.collateralize({'from': accounts[0]});
+    await bitcoincash.approve(swap.address, 1, {'from': accounts[1]});
+
+    await swap.strike({'from': accounts[1]});
   });
 });
 
@@ -156,8 +154,8 @@ contract('SwapToken', function(accounts) {
     await st.issue(1);
 
 
-    console.log(await dogecoin.balanceOf(accounts[0]));
-    console.log(await st.balanceOf(accounts[0]));
+    // console.log(await dogecoin.balanceOf(accounts[0]));
+    // console.log(await st.balanceOf(accounts[0]));
 
 
   });
